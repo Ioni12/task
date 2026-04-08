@@ -20,7 +20,7 @@ public class UserService {
     }
 
     public List<User> getUsersByName(String name) {
-        return userRepository.findByNameContainingIgnoreCase(name);
+        return userRepository.searchByName(name);
     }
 
     public User createUser(User user) {
