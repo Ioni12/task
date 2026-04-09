@@ -3,6 +3,8 @@ package com.example.task.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 @Entity
 @Table(name = "users_for_tak")
@@ -17,6 +19,9 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    @OneToMany(mappedBy = "user")
+    private List<Transactions> transactions;
 
 
 //    public User() {}
