@@ -1,6 +1,7 @@
 package com.example.task.controller;
 
 import com.example.task.entity.User;
+import com.example.task.request.UserRequest;
 import com.example.task.response.UserResponse;
 import com.example.task.service.UserService;
 import org.springframework.http.HttpStatus;
@@ -41,15 +42,15 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(@RequestBody User user) {
-        User created = userService.createUser(user);
+    public ResponseEntity<UserResponse> createUser(@RequestBody UserRequest request) {
+        User created = userService.createUser(request);
         UserResponse response = new UserResponse(created.getId(), created.getName(), created.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody User user) {
-        User updated = userService.updateUser(id, user);
+    public ResponseEntity<UserResponse> updateUser(@PathVariable Long id, @RequestBody UserRequest request) {
+        User updated = userService.updateUser(id, request);
         UserResponse response = new UserResponse(updated.getId(), updated.getName(), updated.getEmail());
         return ResponseEntity.ok(response);
     }

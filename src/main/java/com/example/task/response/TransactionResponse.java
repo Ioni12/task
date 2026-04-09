@@ -9,11 +9,11 @@ public class TransactionResponse {
 
     private LocalDateTime transactionDate;
     private Long amount;
-    private String transactionsDetails;
+    private String transactionDetails;
 
-    public TransactionResponse(LocalDateTime transactionDate, Long amount, String transactionsDetails) {
+    public TransactionResponse(LocalDateTime transactionDate, Long amount, String transactionDetails) {
         this.transactionDate = transactionDate;
         this.amount = amount;
-        this.transactionsDetails = transactionsDetails;
+        this.transactionDetails = transactionDetails;
     }
 }

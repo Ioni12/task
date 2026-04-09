@@ -2,6 +2,7 @@ package com.example.task.service;
 
 import com.example.task.entity.User;
 import com.example.task.repository.UserRepository;
+import com.example.task.request.UserRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,16 +24,19 @@ public class UserService {
         return userRepository.searchByName(name);
     }
 
-    public User createUser(User user) {
+    public User createUser(UserRequest request) {
+        User user = new User();
+        user.setName(request.name());
+        user.setEmail(request.email());
         return userRepository.save(user);
     }
 
-    public User updateUser(Long id, User updatedUser) {
+    public User updateUser(Long id, UserRequest request) {
         User existing = userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
-        existing.setName(updatedUser.getName());
-        existing.setEmail(updatedUser.getEmail());
+        existing.setName(request.name());
+        existing.setEmail(request.email());
 
         return userRepository.save(existing);
     }
