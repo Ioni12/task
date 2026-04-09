@@ -8,6 +8,7 @@ import com.example.task.request.TransactionRequest;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -32,7 +33,9 @@ public class TransactionService {
         Transaction transaction = new Transaction();
         transaction.setUser(user);
         transaction.setTransactionDate(request.transactionDate());
-        transaction.setAmount(request.amount());
+        transaction.setAmount(request.amount().
+                multiply(BigDecimal.valueOf(100))
+                .longValue());
         transaction.setTransactionDetails(request.transactionDetails());
 
         return transactionRepository.save(transaction);
