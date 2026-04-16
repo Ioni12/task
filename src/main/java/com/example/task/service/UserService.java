@@ -4,6 +4,7 @@ import com.example.task.entity.User;
 import com.example.task.repository.UserRepository;
 import com.example.task.request.UserRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
 
@@ -11,9 +12,11 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<User> getAllUsers() {
@@ -28,6 +31,7 @@ public class UserService {
         User user = new User();
         user.setName(request.name());
         user.setEmail(request.email());
+        user.setPassword(passwordEncoder.encode(request.password()));
         return userRepository.save(user);
     }
 
@@ -37,6 +41,10 @@ public class UserService {
 
         existing.setName(request.name());
         existing.setEmail(request.email());
+
+        if (request.password() != null && !request.password().isBlank()) {
+            existing.setPassword(passwordEncoder.encode(request.password()));
+        }
 
         return userRepository.save(existing);
     }
