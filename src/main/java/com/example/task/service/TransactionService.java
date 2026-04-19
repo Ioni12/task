@@ -6,11 +6,13 @@ import com.example.task.repository.TransactionRepository;
 import com.example.task.repository.UserRepository;
 import com.example.task.request.TransactionRequest;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+@Slf4j
 @Service
 public class TransactionService {
 
@@ -23,21 +25,28 @@ public class TransactionService {
     }
 
     public List<Transaction> getTransactionsByName(String name) {
-        return transactionRepository.findByUserName(name);
+        log.debug("Fetching transactions for user: {}", name);
+        return transactionRepository.findByUserNameTransactions(name);
     }
 
     public Transaction createTransaction(TransactionRequest request) {
-        User user = userRepository.findByName(request.name()).
-                orElseThrow(() -> new EntityNotFoundException("user not found" + request.name()));
+        log.info("Creating transaction for user: {}", request.base().name());
+        User user = userRepository.findByName(request.base().name())
+                .orElseThrow(() -> {
+                    log.warn("User not found: {}", request.base().name());
+                    return new EntityNotFoundException("user not found" + request.base().name());
+                });
 
         Transaction transaction = new Transaction();
         transaction.setUser(user);
         transaction.setTransactionDate(request.transactionDate());
-        transaction.setAmount(request.amount().
-                multiply(BigDecimal.valueOf(100))
+        transaction.setAmount(request.amount()
+                .multiply(BigDecimal.valueOf(100))
                 .longValue());
         transaction.setTransactionDetails(request.transactionDetails());
 
-        return transactionRepository.save(transaction);
+        Transaction saved = transactionRepository.save(transaction);
+        log.info("Transaction created with id: {} for user: {}", saved.getId(), user.getName());
+        return saved;
     }
 }

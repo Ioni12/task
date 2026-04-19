@@ -8,3 +8,16 @@
   1. take all transactions based omn user name
   2. insert new transaction -> get an input users name and then you find its id on that
 
+- query
+- logs
+  1. info 
+  2. debug
+  3. trace
+  4. error
+  5. warn
+- application configure the logs level
+- Builder pattern implementation
+- record-class difference
+- abstract class and normal class difference
+- abstract class interface difference
+- Refactor TransactionRequest and UserRequest to remove duplicate fields(inheritance)

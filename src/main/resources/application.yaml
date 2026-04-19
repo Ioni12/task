@@ -23,3 +23,9 @@ springdoc:
     path: /swagger-ui/index.html
   api-docs:
     path: /v3/api-docs
+
+logging:
+  level:
+    root: INFO
+    com.example.task: DEBUG
+  config: classpath:logback-spring.xml

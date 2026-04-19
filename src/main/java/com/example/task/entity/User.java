@@ -1,13 +1,19 @@
 package com.example.task.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
 @Entity
 @Table(name = "users_for_tak")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class User {
 
     @Id
@@ -27,9 +33,9 @@ public class User {
     private List<Transaction> transactions;
 
 
-//    public User() {}
+//    public User() {} no args constructor
 //
-//    public User(Long id, String name, String email) {
+//    public User(Long id, String name, String email) { all args constructor
 //        this.id = id;
 //        this.name = name;
 //        this.email = email;

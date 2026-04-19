@@ -1,7 +1,7 @@
 package com.example.task.request;
 
 public record UserRequest(
-        String name,
+        BaseRequest base,
         String email,
         String password
 ) {}
