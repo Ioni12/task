@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -30,9 +31,9 @@ public class Transaction {
     private LocalDateTime transactionDate;
 
     @Column(nullable = false)
-    private Long amount;
+    private BigDecimal amount;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(nullable = false, length = 100)
     private String transactionDetails;
 
 }

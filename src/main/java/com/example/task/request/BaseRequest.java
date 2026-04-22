@@ -1,4 +1,9 @@
 package com.example.task.request;
 
-public record BaseRequest(String name) {
+import lombok.Data;
+
+@Data
+public class BaseRequest{
+
+    private String name;
 }

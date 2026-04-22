@@ -30,20 +30,18 @@ public class TransactionService {
     }
 
     public Transaction createTransaction(TransactionRequest request) {
-        log.info("Creating transaction for user: {}", request.base().name());
-        User user = userRepository.findByName(request.base().name())
+        log.info("Creating transaction for user: {}", request.getName());
+        User user = userRepository.findByName(request.getName())
                 .orElseThrow(() -> {
-                    log.warn("User not found: {}", request.base().name());
-                    return new EntityNotFoundException("user not found" + request.base().name());
+                    log.warn("User not found: {}", request.getName());
+                    return new EntityNotFoundException("user not found" + request.getName());
                 });
 
         Transaction transaction = new Transaction();
         transaction.setUser(user);
-        transaction.setTransactionDate(request.transactionDate());
-        transaction.setAmount(request.amount()
-                .multiply(BigDecimal.valueOf(100))
-                .longValue());
-        transaction.setTransactionDetails(request.transactionDetails());
+        transaction.setTransactionDate(request.getTransactionDate());
+        transaction.setAmount(request.getAmount());
+        transaction.setTransactionDetails(request.getTransactionDetails());
 
         Transaction saved = transactionRepository.save(transaction);
         log.info("Transaction created with id: {} for user: {}", saved.getId(), user.getName());

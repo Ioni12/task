@@ -1,7 +1,9 @@
 package com.example.task.request;
 
-public record UserRequest(
-        BaseRequest base,
-        String email,
-        String password
-) {}
+import lombok.Data;
+
+@Data
+public class UserRequest extends BaseRequest{
+        private String email;
+        private String password;
+}

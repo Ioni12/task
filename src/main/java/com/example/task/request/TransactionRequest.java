@@ -1,11 +1,13 @@
 package com.example.task.request;
 
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public record TransactionRequest (
-        BaseRequest base,
-        LocalDateTime transactionDate,
-        BigDecimal amount,
-        String transactionDetails
-) {}
+@Data
+public class TransactionRequest extends BaseRequest  {
+        private LocalDateTime transactionDate;
+        private BigDecimal amount;
+        private String transactionDetails;
+}

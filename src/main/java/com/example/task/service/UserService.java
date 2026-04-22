@@ -1,6 +1,8 @@
 package com.example.task.service;
 
 import com.example.task.entity.User;
+import com.example.task.exception.BadRequestException;
+import com.example.task.exception.ResourceNotFoundException;
 import com.example.task.repository.UserRepository;
 import com.example.task.request.UserRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -32,11 +34,11 @@ public class UserService {
     }
 
     public User createUser(UserRequest request) {
-        log.info("Creating user with email: {}", request.email());
+        log.info("Creating user with email: {}", request.getEmail());
         User user = new User();
-        user.setName(request.base().name());
-        user.setEmail(request.email());
-        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setName(request.getName());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
         User saved = userRepository.save(user);
         log.info("User created with id: {}", saved.getId());
         return saved;
@@ -50,11 +52,11 @@ public class UserService {
                     return new RuntimeException("User not found with id: " + id);
                 });
 
-        existing.setName(request.base().name());
-        existing.setEmail(request.email());
+        existing.setName(request.getName());
+        existing.setEmail(request.getName());
 
-        if (request.password() != null && !request.password().isBlank()) {
-            existing.setPassword(passwordEncoder.encode(request.password()));
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            existing.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
         User updated = userRepository.save(existing);
@@ -70,5 +72,17 @@ public class UserService {
         }
         userRepository.deleteById(id);
         log.info("User deleted with id: {}", id);
+    }
+
+    public void changePassword(String name, String currentPassword, String newPassword) {
+        User user = userRepository.findByName(name)
+                .orElseThrow(() -> new ResourceNotFoundException("User", name));
+
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
     }
 }

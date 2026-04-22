@@ -21,3 +21,11 @@
 - abstract class and normal class difference
 - abstract class interface difference
 - Refactor TransactionRequest and UserRequest to remove duplicate fields(inheritance)
+- return the time it takes to return a response with milliseconds
+- make all the controller log levels info and not debug
+- custom exception for 
+  1. user related errors 
+  2. transaction related errors
+- configure global exception handler
+- user creation not in the auth controller
+- update password
