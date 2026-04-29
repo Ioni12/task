@@ -34,7 +34,7 @@ public class UserController {
         List<UserResponse> responses = new ArrayList<>();
 
         for (User user : users) {
-            responses.add(new UserResponse(user.getId(), user.getName(), user.getEmail()));
+            responses.add(new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
         }
 
         log.info("fetched users in {} ms", System.currentTimeMillis() - start);
@@ -60,7 +60,7 @@ public class UserController {
         log.info("Found {} users for name: {}", users.size(), name);
         List<UserResponse> responses = new ArrayList<>();
         for (User user : users) {
-            responses.add(new UserResponse(user.getId(), user.getName(), user.getEmail()));
+            responses.add(new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
         }
 
         log.info("searched users in {} ms", System.currentTimeMillis() - start);
@@ -70,11 +70,11 @@ public class UserController {
     @PostMapping
     public ResponseEntity<UserResponse> createUser(@RequestBody UserRequest request) {
         long start = System.currentTimeMillis();
-        log.info("Create user request for email: {}, time: {}", request.getEmail(), start);
+        log.info("Create user request for email: {}, time: {}", request.email(), start);
         User created = userService.createUser(request);
         log.info("User created with id: {}", created.getId());
         log.info("created user in {} ms", System.currentTimeMillis() - start);
-        UserResponse response = new UserResponse(created.getId(), created.getName(), created.getEmail());
+        UserResponse response = new UserResponse(created.getId(), created.getUsername(), created.getEmail());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -84,7 +84,7 @@ public class UserController {
         log.info("Update user request for id: {}, time: {}", id, start);
         User updated = userService.updateUser(id, request);
         log.info("User updated with id: {}, time: {}", id, System.currentTimeMillis() - start);
-        UserResponse response = new UserResponse(updated.getId(), updated.getName(), updated.getEmail());
+        UserResponse response = new UserResponse(updated.getId(), updated.getUsername(), updated.getEmail());
         return ResponseEntity.ok(response);
     }
 

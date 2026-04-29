@@ -26,7 +26,7 @@ public class TransactionController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<TransactionResponse>> getAllResponsesByUserName(@RequestParam String name) {
+    public ResponseEntity<List<TransactionResponse>> getAllTransactionsByUserName(@RequestParam String name) {
         long start = System.currentTimeMillis();
         log.info("Fetching transactions for user: {}, time: {}", name, start);
 
@@ -51,7 +51,7 @@ public class TransactionController {
     @PostMapping
     public ResponseEntity<TransactionResponse> createTransaction(@RequestBody TransactionRequest request) {
         long start = System.currentTimeMillis();
-        log.info("Create transaction request for user: {}, time: {}", request.getName(), start);
+        log.info("Create transaction request for user: {}, time: {}", request.base().username(), start);
         Transaction created = transactionService.createTransaction(request);
         log.info("Transaction created with id: {}, time: {}", created.getId(), System.currentTimeMillis() - start);
         TransactionResponse response = new TransactionResponse(

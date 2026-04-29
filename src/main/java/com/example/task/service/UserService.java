@@ -34,11 +34,11 @@ public class UserService {
     }
 
     public User createUser(UserRequest request) {
-        log.info("Creating user with email: {}", request.getEmail());
+        log.info("Creating user with email: {}", request.email());
         User user = new User();
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
-        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setUsername(request.base().username());
+        user.setEmail(request.email());
+        user.setPassword(passwordEncoder.encode(request.password()));
         User saved = userRepository.save(user);
         log.info("User created with id: {}", saved.getId());
         return saved;
@@ -52,11 +52,11 @@ public class UserService {
                     return new RuntimeException("User not found with id: " + id);
                 });
 
-        existing.setName(request.getName());
-        existing.setEmail(request.getName());
+        existing.setUsername(request.base().username());
+        existing.setEmail(request.base().username());
 
-        if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            existing.setPassword(passwordEncoder.encode(request.getPassword()));
+        if (request.password() != null && !request.password().isBlank()) {
+            existing.setPassword(passwordEncoder.encode(request.password()));
         }
 
         User updated = userRepository.save(existing);
@@ -75,7 +75,7 @@ public class UserService {
     }
 
     public void changePassword(String name, String currentPassword, String newPassword) {
-        User user = userRepository.findByName(name)
+        User user = userRepository.findByUsername(name)
                 .orElseThrow(() -> new ResourceNotFoundException("User", name));
 
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {

@@ -20,8 +20,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String name;
+    @Column(nullable = false, unique = true)
+    private String username;
 
     @Column(nullable = false)
     private String password;
@@ -30,7 +30,7 @@ public class User {
     private String email;
 
     @OneToMany(mappedBy = "user")
-    private List<Transaction> transactions;
+    private List<Account> accounts;
 
 
 //    public User() {} no args constructor

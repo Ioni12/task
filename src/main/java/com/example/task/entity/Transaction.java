@@ -23,17 +23,20 @@ public class Transaction {
     @SequenceGenerator(name = "transaction_seq", sequenceName = "transaction_seq", allocationSize = 1)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(nullable = false)
+    private BigDecimal amount;
 
     @Column(nullable = false)
     private LocalDateTime transactionDate;
 
+    @ManyToOne
+    @JoinColumn(name = "account_id")
+    private Account account;
+
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private BigDecimal amount;
+    private TransactionType type;
 
     @Column(nullable = false, length = 100)
     private String transactionDetails;
-
 }

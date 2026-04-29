@@ -47,12 +47,12 @@ public class AuthController {
     public ResponseEntity<String> login(@RequestBody LoginRequest request,
                                         HttpServletRequest httpRequest) {
         long start = System.currentTimeMillis();
-        log.info("Login attempt for user: {}, time: {}", request.getName(), start);
+        log.info("Login attempt for user: {}, time: {}", request.base().username(), start);
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.getName(),
-                            request.getPassword()
+                            request.base().username(),
+                            request.password()
                     )
             );
 
@@ -64,11 +64,11 @@ public class AuthController {
                     SecurityContextHolder.getContext()
             );
 
-            log.info("Login successful for user: {}, time: {}", request.getName(), System.currentTimeMillis() - start);
+            log.info("Login successful for user: {}, time: {}", request.base().username(), System.currentTimeMillis() - start);
             return ResponseEntity.ok("Login successful");
 
         } catch (AuthenticationException e) {
-            log.warn("Login failed for user: {}, time: {}", request.getName(), System.currentTimeMillis() - start);
+            log.warn("Login failed for user: {}, time: {}", request.base().username(), System.currentTimeMillis() - start);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
     }

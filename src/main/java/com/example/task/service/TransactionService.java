@@ -1,7 +1,10 @@
 package com.example.task.service;
 
+import com.example.task.entity.Account;
 import com.example.task.entity.Transaction;
+import com.example.task.entity.TransactionType;
 import com.example.task.entity.User;
+import com.example.task.repository.AccountRepository;
 import com.example.task.repository.TransactionRepository;
 import com.example.task.repository.UserRepository;
 import com.example.task.request.TransactionRequest;
@@ -17,10 +20,15 @@ import java.util.List;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final AccountRepository accountRepository;
     private final UserRepository userRepository;
 
-    public TransactionService(TransactionRepository transactionRepository, UserRepository userRepository) {
+    public TransactionService(
+            TransactionRepository transactionRepository,
+            AccountRepository accountRepository,
+            UserRepository userRepository) {
         this.transactionRepository = transactionRepository;
+        this.accountRepository = accountRepository;
         this.userRepository = userRepository;
     }
 
@@ -30,21 +38,36 @@ public class TransactionService {
     }
 
     public Transaction createTransaction(TransactionRequest request) {
-        log.info("Creating transaction for user: {}", request.getName());
-        User user = userRepository.findByName(request.getName())
-                .orElseThrow(() -> {
-                    log.warn("User not found: {}", request.getName());
-                    return new EntityNotFoundException("user not found" + request.getName());
-                });
+        User user = userRepository.findByUsername(request.base().username())
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + request.base().username()));
+
+        Account account = accountRepository.findById(request.accountId())
+                .orElseThrow(() -> new EntityNotFoundException("Account not found: " + request.accountId()));
+
+        if (!account.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("Account does not belong to this user");
+        }
+
+        if(request.type() == TransactionType.DEPOSIT) {
+            account.setAmount(account.getAmount().add(request.amount()));
+        } else if (request.type() == TransactionType.WITHDRAW) {
+            if (account.getAmount().compareTo(request.amount()) < 0) {
+                throw new IllegalArgumentException("Insufficient funds");
+            }
+            account.setAmount(account.getAmount().subtract(request.amount()));
+        } else {
+            throw new IllegalArgumentException("unsupported transaction type: " + request.type());
+        }
+
+        accountRepository.save(account);
 
         Transaction transaction = new Transaction();
-        transaction.setUser(user);
-        transaction.setTransactionDate(request.getTransactionDate());
-        transaction.setAmount(request.getAmount());
-        transaction.setTransactionDetails(request.getTransactionDetails());
+        transaction.setAccount(account);
+        transaction.setAmount(request.amount());
+        transaction.setTransactionDate(request.transactionDate());
+        transaction.setTransactionDetails(request.transactionDetails());
+        transaction.setType(request.type());
 
-        Transaction saved = transactionRepository.save(transaction);
-        log.info("Transaction created with id: {} for user: {}", saved.getId(), user.getName());
-        return saved;
+        return transactionRepository.save(transaction);
     }
 }

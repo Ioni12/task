@@ -29,3 +29,10 @@
 - configure global exception handler
 - user creation not in the auth controller
 - update password
+- create user account 
+  1. contain the user balance info 
+  2. option to withdraw and deposit
+  3. one user many acounts
+  4. return the users accounts
+
+- implement a cache for maintenance

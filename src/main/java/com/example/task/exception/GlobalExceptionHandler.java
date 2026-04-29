@@ -37,19 +37,6 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(400, ex.getMessage(), request.getRequestURI()));
     }
 
-    //400 @Valid failures
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex,
-                                                          HttpServletRequest request) {
-
-        String message = ex.getBindingResult().getFieldErrors().stream().map(e ->
-                e.getField() + ": " + e.getDefaultMessage()).collect(Collectors.joining(", "));
-
-
-        return ResponseEntity
-                .badRequest()
-                .body(ErrorResponse.of(400, message, request.getRequestURI()));
-    }
 
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponse> handleMissingParam(MissingServletRequestParameterException ex,

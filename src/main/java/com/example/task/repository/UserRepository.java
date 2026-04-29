@@ -13,8 +13,8 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
 //    List<User> findByNameContainingIgnoreCase(String name);
 
-    @Query("SELECT u FROM User u WHERE LOWER(u.name) LIKE LOWER(CONCAT('%', :name, '%'))")
-    List<User> searchByName(@Param("name") String name);
+    @Query("SELECT u FROM User u WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :username, '%'))")
+    List<User> searchByName(@Param("username") String username);
 
-    Optional<User> findByName(String name);
+    Optional<User> findByUsername(String username);
 }
