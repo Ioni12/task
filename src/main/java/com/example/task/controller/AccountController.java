@@ -4,6 +4,7 @@ import com.example.task.entity.Account;
 import com.example.task.request.AccountRequest;
 import com.example.task.response.AccountResponse;
 import com.example.task.service.AccountService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,12 +26,12 @@ public class AccountController {
     }
 
     @PostMapping
-    public ResponseEntity<AccountResponse> createAccount(@RequestBody AccountRequest request) {
+    public ResponseEntity<AccountResponse> createAccount(@Valid @RequestBody AccountRequest request) {
         Long start = System.currentTimeMillis();
         log.info("started creating a account at time: {}", start);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Account created = accountService.createAccount(request, username);
-        AccountResponse response = new AccountResponse(created.getId(), created.getAmount());
+        AccountResponse response = new AccountResponse(created.getId(), created.getAmount(), created.getCurrency());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -43,7 +44,7 @@ public class AccountController {
         List<Account> accounts = accountService.getAllAccounts(username);
         List<AccountResponse> response = new ArrayList<>();
         for(Account account: accounts) {
-            response.add(new AccountResponse(account.getId(), account.getAmount()));
+            response.add(new AccountResponse(account.getId(), account.getAmount(), account.getCurrency()));
         }
         return ResponseEntity.ok(response);
     }

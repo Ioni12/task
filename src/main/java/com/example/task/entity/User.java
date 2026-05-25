@@ -1,5 +1,6 @@
 package com.example.task.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,10 +27,14 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false)
+    private String defaultCurrency;
+
     @Column(nullable = false, unique = true)
     private String email;
 
     @OneToMany(mappedBy = "user")
+    @JsonIgnore
     private List<Account> accounts;
 
 

@@ -1,6 +1,24 @@
 package com.example.task.request;
 
-public record UserRequest(
-        BaseRequest base,
-        String email,
-        String password){}
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+@Data
+public class UserRequest extends BaseRequest{
+
+    @NotBlank(message = "please provide a email")
+    private String email;
+
+    @NotBlank(message = "please provide a password")
+    private String password;
+
+    @NotBlank(message = "please provide the default currency")
+    private String defaultCurrency;
+
+    public UserRequest(String username, String email, String password, String defaultCurrency) {
+        super(username);
+        this.email = email;
+        this.password = password;
+        this.defaultCurrency = defaultCurrency;
+    }
+}

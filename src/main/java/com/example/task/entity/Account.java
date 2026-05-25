@@ -1,5 +1,6 @@
 package com.example.task.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,15 +20,23 @@ public class Account {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long Id;
+    private Long id;
 
     @Column(nullable = false)
     private BigDecimal amount;
+
+    @Column(nullable = false)
+    private String currency;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
     @OneToMany(mappedBy = "account")
+    @JsonIgnore
     private List<Transaction> transactions;
+
+    @OneToMany(mappedBy = "account")
+    @JsonIgnore
+    private List<BalanceHistory> balanceHistories;
 }

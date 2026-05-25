@@ -15,6 +15,11 @@ spring:
         format_sql: true
         default_schema: task
 
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500, expireAfterWrite=5m
+
 server:
   port: 8080
 
@@ -29,3 +34,6 @@ logging:
     root: INFO
     com.example.task: DEBUG
   config: classpath:logback-spring.xml
+
+
+

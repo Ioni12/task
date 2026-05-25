@@ -8,6 +8,7 @@ import com.example.task.response.UserResponse;
 import com.example.task.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -44,15 +45,15 @@ public class AuthController {
 //    }
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest request,
+    public ResponseEntity<String> login(@Valid @RequestBody LoginRequest request,
                                         HttpServletRequest httpRequest) {
         long start = System.currentTimeMillis();
-        log.info("Login attempt for user: {}, time: {}", request.base().username(), start);
+        log.info("Login attempt for user: {}, time: {}", request.getUsername(), start);
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
-                            request.base().username(),
-                            request.password()
+                            request.getUsername(),
+                            request.getPassword()
                     )
             );
 
@@ -64,23 +65,23 @@ public class AuthController {
                     SecurityContextHolder.getContext()
             );
 
-            log.info("Login successful for user: {}, time: {}", request.base().username(), System.currentTimeMillis() - start);
+            log.info("Login successful for user: {}, time: {}", request.getUsername(), System.currentTimeMillis() - start);
             return ResponseEntity.ok("Login successful");
 
         } catch (AuthenticationException e) {
-            log.warn("Login failed for user: {}, time: {}", request.base().username(), System.currentTimeMillis() - start);
+            log.warn("Login failed for user: {}, time: {}", request.getUsername(), System.currentTimeMillis() - start);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
     }
 
     @PatchMapping("/change-password")
-    public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
+    public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
         long start = System.currentTimeMillis();
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         String name = auth.getName();
 
         log.info("change password request for user: {}, time: {}", name, start);
-        userService.changePassword(name, request.currentPassword(), request.newPassword());
+        userService.changePassword(name, request.getCurrentPassword(), request.getNewPassword());
 
         log.info("Password changed for user: {}, time: {}", name, System.currentTimeMillis() - start);
 

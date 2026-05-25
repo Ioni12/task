@@ -1,8 +1,8 @@
 package com.example.task.exception;
 
 import com.example.task.response.ErrorResponse;
-import com.example.task.response.Response;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +24,17 @@ public class GlobalExceptionHandler {
                                                         HttpServletRequest request) {
         log.warn("Not found: {}", ex.getMessage());
         return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ErrorResponse.of(404, ex.getMessage(), request.getRequestURI()));
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), request.getRequestURI()));
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex,
+                                                                   HttpServletRequest request) {
+        log.warn("Constraint Violation: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), request.getRequestURI()));
     }
 
     //400 custom
@@ -58,6 +67,18 @@ public class GlobalExceptionHandler {
                 .body(ErrorResponse.of(400, message, request.getRequestURI()));
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidation(MethodArgumentNotValidException ex,
+                                                          HttpServletRequest request) {
+        String message = ex.getBindingResult().getFieldErrors().stream()
+                .map(e -> e.getField() + ": " + e.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+
+        return ResponseEntity
+                .badRequest()
+                .body(ErrorResponse.of(400, message, request.getRequestURI()));
+    }
+
 
     //500 - fallback
     @ExceptionHandler(Exception.class)
@@ -67,7 +88,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .internalServerError()
-                .body(ErrorResponse.of(500, "internal server error", request.getRequestURI()));
+                .body(ErrorResponse.of(500, ex.getMessage(), request.getRequestURI()));
     }
 
 

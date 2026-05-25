@@ -7,6 +7,9 @@ import com.example.task.repository.UserRepository;
 import com.example.task.request.AccountRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,11 +31,13 @@ public class AccountService {
         return accountRepository.findAccountsByUserId(userId);
     }
 
+    @Cacheable(value = "account", key = "#username")
     public List<Account> getAllAccounts(String username) {
         log.debug("Getting all of the accounts for user with username: {}", username);
         return accountRepository.findAccountsByUsername(username);
     }
 
+    @CacheEvict(value = "account", allEntries = true)
     public Account createAccount(AccountRequest accountRequest, String username) {
         log.info("creating account for user with username: {}", username);
         User user = userRepository.findByUsername(username)
@@ -42,7 +47,8 @@ public class AccountService {
                         });
         Account account = new Account();
         account.setUser(user);
-        account.setAmount(accountRequest.amount());
+        account.setAmount(accountRequest.getAmount());
+        account.setCurrency(accountRequest.getCurrency());
         Account saved = accountRepository.save(account);
         log.info("account created for user");
         return saved;

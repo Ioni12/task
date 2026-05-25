@@ -6,6 +6,8 @@ import com.example.task.exception.ResourceNotFoundException;
 import com.example.task.request.UserRequest;
 import com.example.task.response.UserResponse;
 import com.example.task.service.UserService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Null;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -42,7 +45,7 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<UserResponse>> getUsersByName(@RequestParam String name) {
+    public ResponseEntity<UserResponse> getUserByName(@RequestParam String name) {
         long start = System.currentTimeMillis();
         log.info("Searching users by name: {}, time: {}", name, start);
 
@@ -50,27 +53,22 @@ public class UserController {
             throw new BadRequestException("name parameter must not be blank");
         }
 
-        List<User> users = userService.getUsersByName(name);
-
-        if (users.isEmpty()) {
-            throw new ResourceNotFoundException("User", name);
-        }
+        User user = userService.getUserByName(name)
+                .orElseThrow(() -> new ResourceNotFoundException("you should pass a name as a parameter", name));
 
 
-        log.info("Found {} users for name: {}", users.size(), name);
-        List<UserResponse> responses = new ArrayList<>();
-        for (User user : users) {
-            responses.add(new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
-        }
+        log.info("Found user name: {}", name);
+        UserResponse responses = new UserResponse(user.getId(), user.getUsername(), user.getEmail());
+
 
         log.info("searched users in {} ms", System.currentTimeMillis() - start);
         return ResponseEntity.ok(responses);
     }
 
     @PostMapping
-    public ResponseEntity<UserResponse> createUser(@RequestBody UserRequest request) {
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest request) {
         long start = System.currentTimeMillis();
-        log.info("Create user request for email: {}, time: {}", request.email(), start);
+        log.info("Create user request for email: {}, time: {}", request.getEmail(), start);
         User created = userService.createUser(request);
         log.info("User created with id: {}", created.getId());
         log.info("created user in {} ms", System.currentTimeMillis() - start);

@@ -14,7 +14,9 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("SELECT t FROM Transaction t WHERE t.account.user.id = :userId")
     List<Transaction> findByUserId(@Param("userId") Long userId);
 
-    @Query("SELECT t FROM Transaction t WHERE t.account.user.username = :username")
+    @Query("SELECT t FROM Transaction t WHERE LOWER(t.account.user.username) = LOWER(:username)")
     List<Transaction> findByUserNameTransactions(@Param("username") String username);
+
+
 
 }

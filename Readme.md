@@ -36,3 +36,7 @@
   4. return the users accounts
 
 - implement a cache for maintenance
+
+- currency column
+- currency api
+- balance history     

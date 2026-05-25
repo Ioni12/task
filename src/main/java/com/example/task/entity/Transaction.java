@@ -29,6 +29,9 @@ public class Transaction {
     @Column(nullable = false)
     private LocalDateTime transactionDate;
 
+    @Column(nullable = false)
+    private String currency;
+
     @ManyToOne
     @JoinColumn(name = "account_id")
     private Account account;

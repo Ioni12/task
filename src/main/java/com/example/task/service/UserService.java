@@ -6,10 +6,14 @@ import com.example.task.exception.ResourceNotFoundException;
 import com.example.task.repository.UserRepository;
 import com.example.task.request.UserRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -23,28 +27,33 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Cacheable(value = "users", key="'all'")
     public List<User> getAllUsers() {
         log.debug("Fetching all users");
         return userRepository.findAll();
     }
 
-    public List<User> getUsersByName(String name) {
+    @Cacheable(value = "users", key = "#name")
+    public Optional<User> getUserByName(String name) {
         log.debug("Searching users by name: {}", name);
         return userRepository.searchByName(name);
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     public User createUser(UserRequest request) {
-        log.info("Creating user with email: {}", request.email());
+        log.info("Creating user with email: {}", request.getEmail());
         User user = new User();
-        user.setUsername(request.base().username());
-        user.setEmail(request.email());
-        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setDefaultCurrency(request.getDefaultCurrency());
         User saved = userRepository.save(user);
         log.info("User created with id: {}", saved.getId());
         return saved;
     }
 
-    public User updateUser(Long id, UserRequest request) {
+    @CacheEvict(value = "users", allEntries = true)
+    public User updateUser(Long id, UserRequest request)    {
         log.info("Updating user with id: {}", id);
         User existing = userRepository.findById(id)
                 .orElseThrow(() -> {
@@ -52,11 +61,15 @@ public class UserService {
                     return new RuntimeException("User not found with id: " + id);
                 });
 
-        existing.setUsername(request.base().username());
-        existing.setEmail(request.base().username());
+        existing.setUsername(request.getUsername());
+        existing.setEmail(request.getEmail());
 
-        if (request.password() != null && !request.password().isBlank()) {
-            existing.setPassword(passwordEncoder.encode(request.password()));
+        if(request.getDefaultCurrency() != null && !request.getDefaultCurrency().isBlank()) {
+            existing.setDefaultCurrency(request.getDefaultCurrency());
+        }
+
+        if (request.getPassword() != null && !request.getPassword().isBlank()) {
+            existing.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
         User updated = userRepository.save(existing);
@@ -64,6 +77,7 @@ public class UserService {
         return updated;
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     public void deleteUser(Long id) {
         log.info("Deleting user with id: {}", id);
         if (!userRepository.existsById(id)) {
@@ -74,6 +88,7 @@ public class UserService {
         log.info("User deleted with id: {}", id);
     }
 
+    @CacheEvict(value = "users", allEntries = true)
     public void changePassword(String name, String currentPassword, String newPassword) {
         User user = userRepository.findByUsername(name)
                 .orElseThrow(() -> new ResourceNotFoundException("User", name));

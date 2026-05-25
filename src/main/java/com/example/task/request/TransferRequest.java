@@ -8,18 +8,21 @@ import lombok.Data;
 import java.math.BigDecimal;
 
 @Data
-public class AccountRequest extends BaseRequest{
+public class TransferRequest {
+
+    @NotNull(message = "fromAccountId is required")
+    private Long fromAccountId;
+
+    @NotBlank(message = "username cannot be empty")
+    private String username;
 
     @NotNull(message = "amount is required")
     @Positive(message = "amount must be greater than zero")
     private BigDecimal amount;
 
-    @NotBlank(message = "please give a account currency")
-    private String currency;
-
-    public AccountRequest(String username, BigDecimal amount, String currency) {
-        super(username);
+    public TransferRequest(long fromAccountId, String username, BigDecimal amount) {
+        this.fromAccountId = fromAccountId;
+        this.username = username;
         this.amount = amount;
-        this.currency = currency;
     }
 }
