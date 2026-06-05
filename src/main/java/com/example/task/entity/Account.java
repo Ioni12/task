@@ -12,7 +12,12 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "account")
+@Table(name = "account",
+    uniqueConstraints = {
+        @UniqueConstraint(
+                columnNames = {"account_name", "user_id"}
+        )
+    })
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
@@ -24,6 +29,9 @@ public class Account {
 
     @Column(nullable = false)
     private BigDecimal amount;
+
+    @Column(name = "account_name", nullable = false)
+    private String accountName;
 
     @Column(nullable = false)
     private String currency;

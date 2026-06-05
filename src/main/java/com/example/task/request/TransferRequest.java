@@ -10,19 +10,23 @@ import java.math.BigDecimal;
 @Data
 public class TransferRequest {
 
-    @NotNull(message = "fromAccountId is required")
-    private Long fromAccountId;
+    @NotBlank(message = "fromAccountName is required")
+    private String fromAccountName;
 
     @NotBlank(message = "username cannot be empty")
     private String username;
+
+    @NotNull(message = "the toAccountId is required")
+    private Long accountId;
 
     @NotNull(message = "amount is required")
     @Positive(message = "amount must be greater than zero")
     private BigDecimal amount;
 
-    public TransferRequest(long fromAccountId, String username, BigDecimal amount) {
-        this.fromAccountId = fromAccountId;
+    public TransferRequest(String fromAccountName, String username, Long accountId, BigDecimal amount) {
+        this.fromAccountName = fromAccountName;
         this.username = username;
+        this.accountId = accountId;
         this.amount = amount;
     }
 }

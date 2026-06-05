@@ -14,6 +14,9 @@ public class AccountRequest extends BaseRequest{
     @Positive(message = "amount must be greater than zero")
     private BigDecimal amount;
 
+    @NotBlank(message = "please give a account name")
+    private String accountName;
+
     @NotBlank(message = "please give a account currency")
     private String currency;
 

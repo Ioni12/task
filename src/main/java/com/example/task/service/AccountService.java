@@ -1,15 +1,19 @@
 package com.example.task.service;
 
+import com.example.task.Errors;
 import com.example.task.entity.Account;
 import com.example.task.entity.User;
+import com.example.task.exception.TransactionException;
 import com.example.task.repository.AccountRepository;
 import com.example.task.repository.UserRepository;
 import com.example.task.request.AccountRequest;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -40,16 +44,22 @@ public class AccountService {
     @CacheEvict(value = "account", allEntries = true)
     public Account createAccount(AccountRequest accountRequest, String username) {
         log.info("creating account for user with username: {}", username);
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> {
-                    log.warn("user not found: {}", username);
-                    return new EntityNotFoundException("user not found " + username);
-                        });
-        Account account = new Account();
-        account.setUser(user);
-        account.setAmount(accountRequest.getAmount());
-        account.setCurrency(accountRequest.getCurrency());
-        Account saved = accountRepository.save(account);
+        Account saved = new Account();
+        try {
+            User user = userRepository.findByUsername(username)
+                    .orElseThrow(() -> {
+                        log.warn("user not found: {}", username);
+                        return new EntityNotFoundException("user not found " + username);
+                    });
+            Account account = new Account();
+            account.setUser(user);
+            account.setAmount(accountRequest.getAmount());
+            account.setAccountName(accountRequest.getAccountName().toLowerCase().trim());
+            account.setCurrency(accountRequest.getCurrency());
+             saved = accountRepository.save(account);
+        } catch (DataIntegrityViolationException e) {
+            throw new TransactionException(Errors.ACCOUNT_CONSTRAINT_VIOLATION_ERROR);
+        }
         log.info("account created for user");
         return saved;
     }

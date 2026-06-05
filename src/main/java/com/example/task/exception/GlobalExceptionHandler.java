@@ -18,16 +18,26 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GlobalExceptionHandler {
 
-    //404
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(ResourceNotFoundException ex,
                                                         HttpServletRequest request) {
         log.warn("Not found: {}", ex.getMessage());
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), request.getRequestURI()));
+                .body(ErrorResponse.of(HttpStatus.NO_CONTENT.value(), ex.getMessage(), request.getRequestURI()));
     }
 
+    @ExceptionHandler(TransactionException.class)
+    public ResponseEntity<ErrorResponse> handleTransactionException(TransactionException ex,
+                                                                   HttpServletRequest request) {
+        log.warn("Transaction Exception: {}", ex.getMessage());
+
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ErrorResponse.of(ex.getError().errorCode, ex.getError().message, request.getRequestURI()));
+    }
+/*
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex,
                                                                    HttpServletRequest request) {
@@ -36,14 +46,14 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), request.getRequestURI()));
     }
-
+*/
     //400 custom
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<ErrorResponse> handleBadRequest(BadRequestException ex,
                                                           HttpServletRequest request) {
         return ResponseEntity
                 .badRequest()
-                .body(ErrorResponse.of(400, ex.getMessage(), request.getRequestURI()));
+                .body(ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), request.getRequestURI()));
     }
 
 
@@ -54,7 +64,7 @@ public class GlobalExceptionHandler {
         log.warn("Missing parameter at {}: {}", request.getRequestURI(), message);
         return ResponseEntity
                 .badRequest()
-                .body(ErrorResponse.of(400, message, request.getRequestURI()));
+                .body(ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), message, request.getRequestURI()));
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
@@ -64,7 +74,7 @@ public class GlobalExceptionHandler {
         log.warn("Type mismatch at {}: {}", request.getRequestURI(), message);
         return ResponseEntity
                 .badRequest()
-                .body(ErrorResponse.of(400, message, request.getRequestURI()));
+                .body(ErrorResponse.of(HttpStatus.BAD_REQUEST.value(), message, request.getRequestURI()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -78,7 +88,6 @@ public class GlobalExceptionHandler {
                 .badRequest()
                 .body(ErrorResponse.of(400, message, request.getRequestURI()));
     }
-
 
     //500 - fallback
     @ExceptionHandler(Exception.class)

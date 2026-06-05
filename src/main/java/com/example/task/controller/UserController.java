@@ -7,7 +7,6 @@ import com.example.task.request.UserRequest;
 import com.example.task.response.UserResponse;
 import com.example.task.service.UserService;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Null;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @RestController
@@ -37,7 +35,12 @@ public class UserController {
         List<UserResponse> responses = new ArrayList<>();
 
         for (User user : users) {
-            responses.add(new UserResponse(user.getId(), user.getUsername(), user.getEmail()));
+            responses.add(new UserResponse(
+                    user.getId(),
+                    user.getUsername(),
+                    user.getName(),
+                    user.getEmail(),
+                    user.getDefaultCurrency()));
         }
 
         log.info("fetched users in {} ms", System.currentTimeMillis() - start);
@@ -56,9 +59,19 @@ public class UserController {
         User user = userService.getUserByName(name)
                 .orElseThrow(() -> new ResourceNotFoundException("you should pass a name as a parameter", name));
 
+        List<UserResponse.AccountInfo> accounts = user.getAccounts().stream()
+                .map(a -> new UserResponse.AccountInfo(a.getAccountName(), a.getAmount(), a.getCurrency()))
+                .toList();
 
         log.info("Found user name: {}", name);
-        UserResponse responses = new UserResponse(user.getId(), user.getUsername(), user.getEmail());
+        UserResponse responses = new UserResponse(
+                user.getId(),
+                user.getUsername(),
+                user.getName(),
+                user.getEmail(),
+                user.getDefaultCurrency(),
+                accounts
+        );
 
 
         log.info("searched users in {} ms", System.currentTimeMillis() - start);
@@ -72,7 +85,12 @@ public class UserController {
         User created = userService.createUser(request);
         log.info("User created with id: {}", created.getId());
         log.info("created user in {} ms", System.currentTimeMillis() - start);
-        UserResponse response = new UserResponse(created.getId(), created.getUsername(), created.getEmail());
+        UserResponse response = new UserResponse(
+                created.getId(),
+                created.getUsername(),
+                created.getName(),
+                created.getEmail(),
+                created.getDefaultCurrency());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -82,7 +100,17 @@ public class UserController {
         log.info("Update user request for id: {}, time: {}", id, start);
         User updated = userService.updateUser(id, request);
         log.info("User updated with id: {}, time: {}", id, System.currentTimeMillis() - start);
-        UserResponse response = new UserResponse(updated.getId(), updated.getUsername(), updated.getEmail());
+
+        List<UserResponse.AccountInfo> accounts = updated.getAccounts().stream()
+                .map(a -> new UserResponse.AccountInfo(a.getAccountName(), a.getAmount(), a.getCurrency()))
+                .toList();
+
+        UserResponse response = new UserResponse(
+                updated.getId(),
+                updated.getUsername(),
+                updated.getName(),
+                updated.getEmail(),
+                updated.getDefaultCurrency(), accounts);
         return ResponseEntity.ok(response);
     }
 

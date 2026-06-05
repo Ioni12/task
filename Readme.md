@@ -39,4 +39,11 @@
 
 - currency column
 - currency api
-- balance history     
+- balance history   
+- endpoint to clear the cache
+- transaction exception that handles bussiness logic errors  
+- implement actuator 
+  1. liveness 
+  2. readiness
+- add to the get users endpoints the accounts also not only the users info
+  - unique pair  

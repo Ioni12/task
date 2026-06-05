@@ -25,6 +25,9 @@ public class User {
     private String username;
 
     @Column(nullable = false)
+    private String name;
+
+    @Column(nullable = false)
     private String password;
 
     @Column(nullable = false)
@@ -32,6 +35,12 @@ public class User {
 
     @Column(nullable = false, unique = true)
     private String email;
+
+    @Column(nullable = false, unique = true, updatable = false)
+    private String personalId;
+
+    @Column(nullable = false)
+    private String role = "ROLE_USER";
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore

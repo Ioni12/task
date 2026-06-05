@@ -6,8 +6,14 @@ import lombok.Data;
 @Data
 public class UserRequest extends BaseRequest{
 
+    @NotBlank(message = "please provide a name")
+    private String name;
+
     @NotBlank(message = "please provide a email")
     private String email;
+
+    @NotBlank(message = "please provide a personal Id")
+    private String personalId;
 
     @NotBlank(message = "please provide a password")
     private String password;

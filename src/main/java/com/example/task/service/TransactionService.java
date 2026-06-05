@@ -1,7 +1,11 @@
 package com.example.task.service;
 
+import com.example.task.Errors;
 import com.example.task.client.CurrencyApiClient;
 import com.example.task.entity.*;
+import com.example.task.exception.BadRequestException;
+import com.example.task.exception.ResourceNotFoundException;
+import com.example.task.exception.TransactionException;
 import com.example.task.repository.AccountRepository;
 import com.example.task.repository.BalanceHistoryRepository;
 import com.example.task.repository.TransactionRepository;
@@ -61,17 +65,17 @@ public class TransactionService {
                 request.getAmount(), request.getCurrency());
 
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new EntityNotFoundException("User not found: " + request.getUsername()));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: ", request.getUsername()));
         log.debug("User found - id: {}, username: {}", user.getId(), user.getUsername());
 
         Account account = accountRepository.findById(request.getAccountId())
-                .orElseThrow(() -> new EntityNotFoundException("Account not found: " + request.getAccountId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found: ", request.getAccountId()));
         log.debug("Account found - id: {}, currency: {}, currentBalance: {}, ownerId: {}",
                 account.getId(), account.getCurrency(), account.getAmount(), account.getUser().getId());
 
         if (!account.getUser().getId().equals(user.getId())) {
             log.warn("Ownership mismatch - accountOwnerId: {}, requestUserId: {}", account.getUser().getId(), user.getId());
-            throw new IllegalArgumentException("Account does not belong to this user");
+            throw new BadRequestException("Account does not belong to this user");
         }
 
         String requestCurrency = request.getCurrency().toLowerCase();
@@ -107,11 +111,16 @@ public class TransactionService {
                 convertedAmount = request.getAmount().doubleValue();
                 log.debug("Same currency withdrawal, no conversion needed - amount: {}", convertedAmount);
             } else {
-                log.debug("Currency conversion required for WITHDRAW: {} -> {}", accountCurrency, requestCurrency);
-                CurrencyResponse response = currencyApiClient.getCurrency(accountCurrency);
-                log.debug("Currency API response received: {}", response);
-                convertedAmount = CurrencyConverter.convertWithdraw(response, accountCurrency, requestCurrency, request.getAmount().doubleValue());
-                log.debug("Converted withdrawal amount: {} {} -> {} {}", request.getAmount(), requestCurrency, convertedAmount, accountCurrency);
+                try {
+                    log.debug("Currency conversion required for WITHDRAW: {} -> {}", accountCurrency, requestCurrency);
+                    CurrencyResponse response = currencyApiClient.getCurrency(accountCurrency);
+                    log.debug("Currency API response received: {}", response);
+                    convertedAmount = CurrencyConverter.convertWithdraw(response, accountCurrency, requestCurrency, request.getAmount().doubleValue());
+                    log.debug("Converted withdrawal amount: {} {} -> {} {}", request.getAmount(), requestCurrency, convertedAmount, accountCurrency);
+                } catch (Exception e) {
+                    log.error("Currency API call failed: {}", e.getMessage());
+                    throw new TransactionException(Errors.CURRENCY_FETCH_FAILED);
+                }
             }
 
             if (account.getAmount().compareTo(BigDecimal.valueOf(convertedAmount)) < 0) {
@@ -126,7 +135,7 @@ public class TransactionService {
 
         } else {
             log.error("Unsupported transaction type: {}", request.getType());
-            throw new IllegalArgumentException("Unsupported transaction type: " + request.getType());
+            throw new BadRequestException("Unsupported transaction type: " + request.getType());
         }
 
         accountRepository.save(account);

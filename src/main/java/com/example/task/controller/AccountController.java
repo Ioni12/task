@@ -31,7 +31,7 @@ public class AccountController {
         log.info("started creating a account at time: {}", start);
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Account created = accountService.createAccount(request, username);
-        AccountResponse response = new AccountResponse(created.getId(), created.getAmount(), created.getCurrency());
+        AccountResponse response = new AccountResponse(created.getId(), created.getAmount(), created.getCurrency(), created.getAccountName());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -44,7 +44,7 @@ public class AccountController {
         List<Account> accounts = accountService.getAllAccounts(username);
         List<AccountResponse> response = new ArrayList<>();
         for(Account account: accounts) {
-            response.add(new AccountResponse(account.getId(), account.getAmount(), account.getCurrency()));
+            response.add(new AccountResponse(account.getId(), account.getAmount(), account.getCurrency(), account.getAccountName()));
         }
         return ResponseEntity.ok(response);
     }

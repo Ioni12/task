@@ -1,8 +1,11 @@
 package com.example.task.service;
 
+import com.example.task.Errors;
 import com.example.task.client.CurrencyApiClient;
 import com.example.task.entity.*;
 import com.example.task.exception.BadRequestException;
+import com.example.task.exception.ResourceNotFoundException;
+import com.example.task.exception.TransactionException;
 import com.example.task.repository.AccountRepository;
 import com.example.task.repository.BalanceHistoryRepository;
 import com.example.task.repository.TransactionRepository;
@@ -51,39 +54,39 @@ public class TransferService {
     public List<Transaction> transfer(@RequestBody TransferRequest request) {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        Account from = accountRepository.findAccountById(request.getFromAccountId())
-                .orElseThrow(() -> new RuntimeException("Account not found"));
+        Account from = accountRepository.findAccountByName(request.getFromAccountName())
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found", request.getFromAccountName()));
 
         if(!from.getUser().getUsername().equals(username)) {
-            throw new RuntimeException("Forbidden: you dont own this account");
+            throw new BadRequestException("Forbidden: you dont own this account");
         }
 
         User toUser = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("Recipient not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Recipient not found", request.getUsername()));
 
-        if (toUser.getUsername().equals(username)) {
-            throw new BadRequestException("Cannot transfer to yourself");
+
+        Account to = accountRepository.findAccountById(request.getAccountId())
+                .orElseThrow(() -> new ResourceNotFoundException("account not found", request.getAccountId()));
+
+        if(!to.getUser().getId().equals(toUser.getId())) {
+            throw new ResourceNotFoundException("account not found for user ", to.getUser().getId());
         }
 
-        Account to = toUser.getAccounts().stream()
-                .filter(a -> a.getCurrency().equalsIgnoreCase(toUser.getDefaultCurrency()))
-                .findFirst()
-                .orElse(toUser.getAccounts().stream()
-                        .findFirst()
-                        .orElseThrow(() -> new RuntimeException("Recipient has no accounts")));
-
-
         if(from.getAmount().compareTo(request.getAmount()) < 0) {
-            throw new RuntimeException("Insufficient Funds");
+            throw new TransactionException(Errors.INSUFFICIENT_FUNDS);
         }
 
         BigDecimal convertedAmount;
         if (from.getCurrency().equalsIgnoreCase(to.getCurrency())) {
             convertedAmount = request.getAmount();
         } else {
-            CurrencyResponse rates = currencyApiClient.getCurrency(from.getCurrency());
-            double converted = CurrencyConverter.convertDeposit(rates, from.getCurrency(), to.getCurrency(), request.getAmount().doubleValue());
-            convertedAmount = BigDecimal.valueOf(converted);
+            try {
+                CurrencyResponse rates = currencyApiClient.getCurrency(from.getCurrency());
+                double converted = CurrencyConverter.convertDeposit(rates, from.getCurrency(), to.getCurrency(), request.getAmount().doubleValue());
+                convertedAmount = BigDecimal.valueOf(converted);
+            } catch (Exception e) {
+                throw new TransactionException(Errors.CURRENCY_FETCH_FAILED);
+            }
         }
 
         from.setAmount(from.getAmount().subtract(request.getAmount()));

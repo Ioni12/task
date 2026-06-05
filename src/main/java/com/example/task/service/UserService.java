@@ -43,6 +43,8 @@ public class UserService {
     public User createUser(UserRequest request) {
         log.info("Creating user with email: {}", request.getEmail());
         User user = new User();
+        user.setName(request.getName().toLowerCase().trim());
+        user.setPersonalId(request.getPersonalId());
         user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -58,7 +60,7 @@ public class UserService {
         User existing = userRepository.findById(id)
                 .orElseThrow(() -> {
                     log.warn("User not found with id: {}", id);
-                    return new RuntimeException("User not found with id: " + id);
+                    return new ResourceNotFoundException("User not found with id: ", id);
                 });
 
         existing.setUsername(request.getUsername());
@@ -82,7 +84,7 @@ public class UserService {
         log.info("Deleting user with id: {}", id);
         if (!userRepository.existsById(id)) {
             log.warn("User not found with id: {}", id);
-            throw new RuntimeException("User not found with id: " + id);
+            throw new ResourceNotFoundException("User not found with id: ", id);
         }
         userRepository.deleteById(id);
         log.info("User deleted with id: {}", id);

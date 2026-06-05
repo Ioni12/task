@@ -42,7 +42,7 @@ public class TransferController {
         TransferResponse response = new TransferResponse(
                 "201",
                 "transfer successful",
-                String.valueOf(request.getFromAccountId()),
+                String.valueOf(request.getFromAccountName()),
                 request.getUsername(),
                 fromTx.getCurrency(),
                 fromTx.getAccount().getAmount(),
