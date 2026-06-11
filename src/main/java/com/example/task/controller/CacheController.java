@@ -19,5 +19,6 @@ public class CacheController {
         cacheManager.getCacheNames()
                 .forEach(name -> cacheManager.getCache(name).clear());
         return ResponseEntity.ok("all caches cleared");
+        //TODO add a custom response
     }
 }

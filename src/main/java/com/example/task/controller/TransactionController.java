@@ -32,11 +32,7 @@ public class TransactionController {
     public ResponseEntity<List<TransactionResponse>> getAllTransactionsByUserName(@RequestParam(required = true) @NotBlank(message = "name cannot be empty") String name) {
         long start = System.currentTimeMillis();
         log.info("Fetching transactions for user: {}, time: {}", name, start);
-/*
-        if (name.isBlank()) {
-            throw new BadRequestException("name parameter must not be blank");
-        }
-*/
+
         List<Transaction> transactions = transactionService.getTransactionsByName(name);
 
         if (transactions.isEmpty()) {

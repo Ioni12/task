@@ -17,6 +17,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     @Query("SELECT t FROM Transaction t WHERE LOWER(t.account.user.username) = LOWER(:username)")
     List<Transaction> findByUserNameTransactions(@Param("username") String username);
 
-
+// override save method
 
 }

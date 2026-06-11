@@ -23,12 +23,16 @@ import java.util.List;
 @NoArgsConstructor
 public class Account {
 
+    //todo add iban instead of account name
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
     private BigDecimal amount;
+
+    @Column(nullable = false, unique = true, length = 28)
+    private String iban;
 
     @Column(name = "account_name", nullable = false)
     private String accountName;

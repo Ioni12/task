@@ -32,7 +32,7 @@ public class AccountController {
         String username = SecurityContextHolder.getContext().getAuthentication().getName();
         Account created = accountService.createAccount(request, username);
         AccountResponse response = new AccountResponse(created.getId(), created.getAmount(), created.getCurrency(), created.getAccountName());
-
+        log.info("created account at: {} ms", System.currentTimeMillis() - start);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -46,6 +46,7 @@ public class AccountController {
         for(Account account: accounts) {
             response.add(new AccountResponse(account.getId(), account.getAmount(), account.getCurrency(), account.getAccountName()));
         }
+        log.info("searched accounts at: {} ms", System.currentTimeMillis() - start);
         return ResponseEntity.ok(response);
     }
 }

@@ -31,10 +31,10 @@ public class TransferController {
 
         List<Transaction> transactions = transferService.transfer(request);
 
-        Transaction fromTx = null;
-        for(Transaction t: transactions) {
-            if(t.getType() == TransactionType.WITHDRAW) {
-                fromTx = t;
+        Transaction withdrawalTransaction = null;
+        for(Transaction transaction: transactions) {
+            if(transaction.getType() == TransactionType.WITHDRAW) {
+                withdrawalTransaction = transaction;
                 break;
             }
         }
@@ -44,8 +44,8 @@ public class TransferController {
                 "transfer successful",
                 String.valueOf(request.getFromAccountName()),
                 request.getUsername(),
-                fromTx.getCurrency(),
-                fromTx.getAccount().getAmount(),
+                withdrawalTransaction.getCurrency(),
+                withdrawalTransaction.getAccount().getAmount(),
                 request.getAmount()
         );
         return ResponseEntity.ok(response);
