@@ -1,37 +1,35 @@
 package com.example.task.response;
 
-import com.example.task.entity.Account;
-import lombok.Data;
+import com.example.task.entity.AccountStatus;
+import com.example.task.entity.UserStatus;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
-public class UserResponse {
-
-    private Long id;
-    private String username;
-    private String name;
-    private String email;
-    private String defaultCurrency;
-    private List<AccountInfo> accounts;
-
-    public record AccountInfo(String accountName, BigDecimal amount, String currency) {}
-
-    public UserResponse(Long id, String username, String name,
-                        String email, String defaultCurrency) {
-        this.id = id;
-        this.username = username;
-        this.name = name;
-        this.email = email;
-        this.defaultCurrency = defaultCurrency;
-    }
-
-    public UserResponse(Long id, String username, String name,
-                        String email, String defaultCurrency,
-                        List<AccountInfo> accounts) {
-        this(id, username, name, email, defaultCurrency);
-        this.accounts = accounts;
-    }
-
+public record UserResponse(
+        Long id,
+        String username,
+        String name,
+        String email,
+        String defaultCurrency,
+        String phone,
+        LocalDate dateOfBirth,
+        String street,
+        String city,
+        String country,
+        String postalCode,
+        UserStatus status,
+        LocalDateTime createdAt,
+        List<AccountInfo> accounts
+) {
+    public record AccountInfo(
+            String iban,
+            String accountName,
+            BigDecimal amount,
+            String currency,
+            AccountStatus status,
+            LocalDateTime createdAt
+    ) {}
 }

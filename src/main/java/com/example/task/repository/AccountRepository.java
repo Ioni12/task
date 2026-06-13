@@ -19,10 +19,13 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Query("SELECT a FROM Account a WHERE LOWER(a.user.username) = LOWER(:username)")
     List<Account> findAccountsByUsername(@Param("username") String username);
 
+    @Query("SELECT a FROM Account a WHERE LOWER(a.accountName) = LOWER(:accountName) AND a.user.username = :username")
+    Optional<Account> findAccountByNameAndUsername(@Param("accountName") String accountName, @Param("username") String username);
+
     @Query("SELECT a FROM Account a WHERE a.id = :accountId")
     Optional<Account> findAccountById(@Param("accountId") long accountId);
 
-    @Query("SELECT a FROM Account a Where a.accountName = :accountName")
+    @Query("SELECT a FROM Account a WHERE LOWER(a.accountName) = LOWER(:accountName)")
     Optional<Account> findAccountByName(@Param("accountName") String accountName);
 
     @Query("SELECT a FROM Account a JOIN user u WHERE a.id = :accountId AND u.username = :username")

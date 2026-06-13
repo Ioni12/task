@@ -3,28 +3,25 @@ package com.example.task.service;
 import com.example.task.Errors;
 import com.example.task.client.CurrencyApiClient;
 import com.example.task.entity.*;
-import com.example.task.exception.BadRequestException;
 import com.example.task.exception.ResourceNotFoundException;
 import com.example.task.exception.TransactionException;
 import com.example.task.repository.AccountRepository;
 import com.example.task.repository.BalanceHistoryRepository;
 import com.example.task.repository.TransactionRepository;
-import com.example.task.repository.UserRepository;
 import com.example.task.request.TransferRequest;
 import com.example.task.response.CurrencyResponse;
 import com.example.task.utils.CurrencyConverter;
 import com.example.task.utils.TransformerUtility;
-import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 public class TransferService {
 
@@ -45,19 +42,34 @@ public class TransferService {
         this.currencyApiClient = currencyApiClient;
     }
 
-    @Caching(evict= {
+    @Caching(evict = {
             @CacheEvict(value = "transactions", allEntries = true),
             @CacheEvict(value = "account", allEntries = true)
     })
-    public List<Transaction> transfer(@RequestBody TransferRequest request) {
+    public List<Transaction> transfer(TransferRequest request) {
+        String senderUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        log.info("Transfer request - sender: {}, fromAccount: {}, toAccountId: {}, amount: {}",
+                senderUsername, request.getFromAccountName(), request.getAccountId(), request.getAmount());
 
-        Account senderAccount = accountRepository.findAccountByName(request.getFromAccountName())
+        Account senderAccount = accountRepository.findAccountByNameAndUsername(request.getFromAccountName(), senderUsername)
                 .orElseThrow(() -> new ResourceNotFoundException("Account not found", request.getFromAccountName()));
 
         Account recipientAccount = accountRepository.findAccountByIdAndUsername(request.getAccountId(), request.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("account not found", request.getAccountId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Recipient account not found", request.getAccountId()));
 
-        if(senderAccount.getAmount().compareTo(request.getAmount()) < 0) {
+        if (senderAccount.getId().equals(recipientAccount.getId())) {
+            throw new TransactionException(Errors.SAME_ACCOUNT_TRANSFER);
+        }
+
+        if (senderAccount.getStatus() != AccountStatus.ACTIVE) {
+            throw new TransactionException(Errors.ACCOUNT_FROZEN);
+        }
+
+        if (recipientAccount.getStatus() != AccountStatus.ACTIVE) {
+            throw new TransactionException(Errors.ACCOUNT_FROZEN);
+        }
+
+        if (senderAccount.getAmount().compareTo(request.getAmount()) < 0) {
             throw new TransactionException(Errors.INSUFFICIENT_FUNDS);
         }
 
@@ -69,6 +81,7 @@ public class TransferService {
                 CurrencyResponse currencyRates = currencyApiClient.getCurrency(senderAccount.getCurrency());
                 convertedTransferAmount = CurrencyConverter.convertDeposit(currencyRates, senderAccount.getCurrency(), recipientAccount.getCurrency(), request.getAmount());
             } catch (Exception e) {
+                log.error("Currency conversion failed: {}", e.getMessage());
                 throw new TransactionException(Errors.CURRENCY_FETCH_FAILED);
             }
         }
@@ -79,15 +92,21 @@ public class TransferService {
         accountRepository.save(senderAccount);
         accountRepository.save(recipientAccount);
 
-        Transaction withdrawalTransaction = transactionRepository.save(TransformerUtility.createWithdrawTransaction(senderAccount,request.getAmount(), recipientAccount));
+        Transaction withdrawalTransaction = transactionRepository.save(
+                TransformerUtility.createWithdrawTransaction(senderAccount, request.getAmount(), recipientAccount));
 
-        Transaction depositTransaction = transactionRepository.save(TransformerUtility.createDepositTransaction(recipientAccount, convertedTransferAmount, senderAccount));
+        Transaction depositTransaction = transactionRepository.save(
+                TransformerUtility.createDepositTransaction(recipientAccount, convertedTransferAmount, senderAccount));
 
-        balanceHistoryRepository.save(TransformerUtility.createWithdrawBalanceHistory(senderAccount, withdrawalTransaction, request.getAmount()));
+        balanceHistoryRepository.save(
+                TransformerUtility.createWithdrawBalanceHistory(senderAccount, withdrawalTransaction, request.getAmount()));
 
-        balanceHistoryRepository.save(TransformerUtility.createDepositBalanceHistory(recipientAccount, depositTransaction, convertedTransferAmount));
+        balanceHistoryRepository.save(
+                TransformerUtility.createDepositBalanceHistory(recipientAccount, depositTransaction, convertedTransferAmount));
+
+        log.info("Transfer completed - sender: {}, recipient: {}, amount: {}, converted: {}",
+                senderAccount.getIban(), recipientAccount.getIban(), request.getAmount(), convertedTransferAmount);
 
         return List.of(withdrawalTransaction, depositTransaction);
     }
-
 }
