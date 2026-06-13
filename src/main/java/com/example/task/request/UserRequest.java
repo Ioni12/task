@@ -1,30 +1,48 @@
 package com.example.task.request;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
-@Data
-public class UserRequest extends BaseRequest{
+import java.time.LocalDate;
 
-    @NotBlank(message = "please provide a name")
+@Data
+public class UserRequest extends BaseRequest {
+
+    @NotBlank(message = "Please provide a name")
     private String name;
 
-    @NotBlank(message = "please provide a email")
+    @NotBlank(message = "Please provide an email")
     private String email;
 
-    @NotBlank(message = "please provide a personal Id")
+    @NotBlank(message = "Please provide a personal ID")
     private String personalId;
 
-    @NotBlank(message = "please provide a password")
+    @NotBlank(message = "Please provide a password")
     private String password;
 
-    @NotBlank(message = "please provide the default currency")
+    @NotBlank(message = "Please provide a default currency")
     private String defaultCurrency;
 
-    public UserRequest(String username, String email, String password, String defaultCurrency) {
-        super(username);
-        this.email = email;
-        this.password = password;
-        this.defaultCurrency = defaultCurrency;
-    }
+    @NotBlank(message = "Please provide a phone number")
+    @Pattern(regexp = "^\\+?[0-9]{7,15}$", message = "Please provide a valid phone number")
+    private String phone;
+
+    @NotNull(message = "Please provide a date of birth")
+    @Past(message = "Date of birth must be in the past")
+    private LocalDate dateOfBirth;
+
+    @NotBlank(message = "Please provide a street")
+    private String street;
+
+    @NotBlank(message = "Please provide a city")
+    private String city;
+
+    @NotBlank(message = "Please provide a country")
+    private String country;
+
+    @NotBlank(message = "Please provide a postal code")
+    private String postalCode;
 }

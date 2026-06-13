@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -41,6 +43,31 @@ public class User {
 
     @Column(nullable = false)
     private String role = "ROLE_USER";
+
+    @Column(nullable = false, unique = true)
+    private String phone;
+
+    @Column(nullable = false)
+    private LocalDate dateOfBirth;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status = UserStatus.ACTIVE;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
+
+    @Column(nullable = false)
+    private String street;
+
+    @Column(nullable = false)
+    private String city;
+
+    @Column(nullable = false)
+    private String country;
+
+    @Column(nullable = false)
+    private String postalCode;
 
     @OneToMany(mappedBy = "user")
     @JsonIgnore

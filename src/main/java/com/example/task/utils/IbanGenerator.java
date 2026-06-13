@@ -12,8 +12,8 @@ public final class IbanGenerator {
 
     private IbanGenerator(){}
 
-    public static String generate() {
-        String accountNumber = generateAccountNumber();
+    public static String generate(String accountNumber) {
+//        String accountNumber = generateAccountNumber();
         String bban = BANK_CODE + BRANCH_CODE + accountNumber;
         String checkDigits = calculateCheckDigits(COUNTRY_CODE, bban);
         return COUNTRY_CODE + checkDigits + bban;
@@ -28,10 +28,10 @@ public final class IbanGenerator {
     }
 
     // make it sequential increment it by one 
-    private static String generateAccountNumber() {
-        long number = RANDOM.nextLong(1_000_000_000_000_000L, 9_999_999_999_999_999L);
-        return String.valueOf(number);
-    }
+//    private static String generateAccountNumber() {
+//        long number = RANDOM.nextLong(1_000_000_000_000_000L, 9_999_999_999_999_999L);
+//        return String.valueOf(number);
+//    }
 
     private static String calculateCheckDigits(String countryCode, String bban) {
         String rearranged = bban + countryCode + "00";
