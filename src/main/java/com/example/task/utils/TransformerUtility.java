@@ -1,10 +1,6 @@
 package com.example.task.utils;
 
-import com.example.task.entity.Account;
-import com.example.task.entity.BalanceHistory;
-import com.example.task.entity.Transaction;
-import com.example.task.entity.TransactionType;
-import com.example.task.request.TransferRequest;
+import com.example.task.entity.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,9 +9,11 @@ public final class TransformerUtility {
 
     private TransformerUtility() {}
 
+    // Transfer withdraw
     public static Transaction createWithdrawTransaction(Account senderAccount,
                                                         BigDecimal amount,
-                                                        Account recipientAccount) {
+                                                        Account recipientAccount,
+                                                        Transfer transfer) {
         return Transaction.builder()
                 .account(senderAccount)
                 .amount(amount.negate())
@@ -23,28 +21,58 @@ public final class TransformerUtility {
                 .transactionDate(LocalDateTime.now())
                 .type(TransactionType.WITHDRAW)
                 .transactionDetails("Transfer to account #" + recipientAccount.getId())
+                .transfer(transfer)
                 .build();
     }
 
+    // Transfer deposit
     public static Transaction createDepositTransaction(Account recipientAccount,
                                                        BigDecimal convertedTransferAmount,
-                                                       Account senderAccount) {
+                                                       Account senderAccount,
+                                                       Transfer transfer) {
         return Transaction.builder()
                 .account(recipientAccount)
-                .amount(convertedTransferAmount.negate())
+                .amount(convertedTransferAmount)
                 .currency(recipientAccount.getCurrency())
                 .transactionDate(LocalDateTime.now())
                 .type(TransactionType.DEPOSIT)
                 .transactionDetails("Transfer from account #" + senderAccount.getId())
+                .transfer(transfer)
+                .build();
+    }
+
+    // Standalone withdraw
+    public static Transaction createWithdrawTransaction(Account account,
+                                                        BigDecimal amount) {
+        return Transaction.builder()
+                .account(account)
+                .amount(amount.negate())
+                .currency(account.getCurrency())
+                .transactionDate(LocalDateTime.now())
+                .type(TransactionType.WITHDRAW)
+                .transactionDetails("Withdrawal")
+                .build();
+    }
+
+    // Standalone deposit
+    public static Transaction createDepositTransaction(Account account,
+                                                       BigDecimal amount) {
+        return Transaction.builder()
+                .account(account)
+                .amount(amount)
+                .currency(account.getCurrency())
+                .transactionDate(LocalDateTime.now())
+                .type(TransactionType.DEPOSIT)
+                .transactionDetails("Deposit")
                 .build();
     }
 
     public static BalanceHistory createWithdrawBalanceHistory(Account senderAccount,
-                                                              Transaction withdrawlTransaction,
+                                                              Transaction withdrawalTransaction,
                                                               BigDecimal amount) {
         return BalanceHistory.builder()
                 .account(senderAccount)
-                .transaction(withdrawlTransaction)
+                .transaction(withdrawalTransaction)
                 .balanceBefore(senderAccount.getAmount().add(amount))
                 .balanceAfter(senderAccount.getAmount())
                 .changeAmount(amount.negate())
@@ -59,7 +87,7 @@ public final class TransformerUtility {
         return BalanceHistory.builder()
                 .account(recipientAccount)
                 .transaction(depositTransaction)
-                .balanceBefore(recipientAccount.getAmount().add(convertedTransferAmount))
+                .balanceBefore(recipientAccount.getAmount().subtract(convertedTransferAmount))
                 .balanceAfter(recipientAccount.getAmount())
                 .changeAmount(convertedTransferAmount)
                 .transactionType(TransactionType.DEPOSIT)

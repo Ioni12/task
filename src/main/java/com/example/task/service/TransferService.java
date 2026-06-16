@@ -8,6 +8,7 @@ import com.example.task.exception.TransactionException;
 import com.example.task.repository.AccountRepository;
 import com.example.task.repository.BalanceHistoryRepository;
 import com.example.task.repository.TransactionRepository;
+import com.example.task.repository.TransferRepository;
 import com.example.task.request.TransferRequest;
 import com.example.task.response.CurrencyResponse;
 import com.example.task.utils.CurrencyConverter;
@@ -19,6 +20,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -29,17 +32,20 @@ public class TransferService {
     private final TransactionRepository transactionRepository;
     private final BalanceHistoryRepository balanceHistoryRepository;
     private final CurrencyApiClient currencyApiClient;
+    private final TransferRepository transferRepository;
 
     public TransferService(
             AccountRepository accountRepository,
             TransactionRepository transactionRepository,
             BalanceHistoryRepository balanceHistoryRepository,
-            CurrencyApiClient currencyApiClient
+            CurrencyApiClient currencyApiClient,
+            TransferRepository transferRepository
     ) {
         this.accountRepository = accountRepository;
         this.transactionRepository = transactionRepository;
         this.balanceHistoryRepository = balanceHistoryRepository;
         this.currencyApiClient = currencyApiClient;
+        this.transferRepository = transferRepository;
     }
 
     @Caching(evict = {
@@ -74,12 +80,15 @@ public class TransferService {
         }
 
         BigDecimal convertedTransferAmount;
+        BigDecimal exchangeRate = null;
+
         if (senderAccount.getCurrency().equalsIgnoreCase(recipientAccount.getCurrency())) {
             convertedTransferAmount = request.getAmount();
         } else {
             try {
                 CurrencyResponse currencyRates = currencyApiClient.getCurrency(senderAccount.getCurrency());
                 convertedTransferAmount = CurrencyConverter.convertDeposit(currencyRates, senderAccount.getCurrency(), recipientAccount.getCurrency(), request.getAmount());
+                exchangeRate = convertedTransferAmount.divide(request.getAmount(), 10, RoundingMode.HALF_UP);
             } catch (Exception e) {
                 log.error("Currency conversion failed: {}", e.getMessage());
                 throw new TransactionException(Errors.CURRENCY_FETCH_FAILED);
@@ -92,11 +101,21 @@ public class TransferService {
         accountRepository.save(senderAccount);
         accountRepository.save(recipientAccount);
 
+        Transfer transfer = Transfer.builder()
+                .amount(request.getAmount())
+                .fromCurrency(senderAccount.getCurrency())
+                .toCurrency(recipientAccount.getCurrency())
+                .exchangeRate(exchangeRate)
+                .createdAt(LocalDateTime.now())
+                .status(TransferStatus.COMPLETED)
+                .build();
+        transfer = transferRepository.save(transfer);
+
         Transaction withdrawalTransaction = transactionRepository.save(
-                TransformerUtility.createWithdrawTransaction(senderAccount, request.getAmount(), recipientAccount));
+                TransformerUtility.createWithdrawTransaction(senderAccount, request.getAmount(), recipientAccount, transfer));
 
         Transaction depositTransaction = transactionRepository.save(
-                TransformerUtility.createDepositTransaction(recipientAccount, convertedTransferAmount, senderAccount));
+                TransformerUtility.createDepositTransaction(recipientAccount, convertedTransferAmount, senderAccount, transfer));
 
         balanceHistoryRepository.save(
                 TransformerUtility.createWithdrawBalanceHistory(senderAccount, withdrawalTransaction, request.getAmount()));
@@ -104,8 +123,8 @@ public class TransferService {
         balanceHistoryRepository.save(
                 TransformerUtility.createDepositBalanceHistory(recipientAccount, depositTransaction, convertedTransferAmount));
 
-        log.info("Transfer completed - sender: {}, recipient: {}, amount: {}, converted: {}",
-                senderAccount.getIban(), recipientAccount.getIban(), request.getAmount(), convertedTransferAmount);
+        log.info("Transfer completed - sender: {}, recipient: {}, amount: {}, converted: {}, exchangeRate: {}",
+                senderAccount.getIban(), recipientAccount.getIban(), request.getAmount(), convertedTransferAmount, exchangeRate);
 
         return List.of(withdrawalTransaction, depositTransaction);
     }

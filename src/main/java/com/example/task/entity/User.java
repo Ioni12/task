@@ -13,7 +13,7 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "users_for_tak")
+@Table(name = "users_for_task")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

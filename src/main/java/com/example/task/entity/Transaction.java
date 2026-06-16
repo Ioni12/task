@@ -42,4 +42,8 @@ public class Transaction {
 
     @Column(nullable = false, length = 100)
     private String transactionDetails;
+
+    @ManyToOne
+    @JoinColumn(name = "transfer_id")
+    private Transfer transfer;
 }
