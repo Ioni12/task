@@ -47,3 +47,15 @@
   2. readiness
 - add to the get users endpoints the accounts also not only the users info
   - unique pair  
+## Running locally
+
+The database password is read from the `DB_PASSWORD` environment variable. Set it before starting the app:
+
+```bash
+# macOS / Linux
+export DB_PASSWORD=your-password
+# Windows PowerShell
+$env:DB_PASSWORD="your-password"
+
+./mvnw spring-boot:run
+```
